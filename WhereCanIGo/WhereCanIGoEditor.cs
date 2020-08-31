@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using KSP.UI.Screens;
+﻿using KSP.UI.Screens;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace WhereCanIGo
@@ -35,7 +35,7 @@ namespace WhereCanIGo
 
         private void RemoveToolbarButton(GameScenes whatever)
         {
-            if(_toolbarButton != null) ApplicationLauncher.Instance.RemoveModApplication(_toolbarButton);
+            if (_toolbarButton != null) ApplicationLauncher.Instance.RemoveModApplication(_toolbarButton);
             _toolbarButton = null;
         }
 
@@ -49,7 +49,7 @@ namespace WhereCanIGo
             List<DialogGUIBase> guiItems = new List<DialogGUIBase>();
             if (EditorLogic.fetch == null || EditorLogic.fetch.ship == null)
             {
-                guiItems.Add(new DialogGUILabel("No Vessel Detected"));
+                guiItems.Add(new DialogGUILabel(LocalizedStrings.Dialog_title));//"No Vessel Detected"
             }
             else
             {
@@ -57,27 +57,27 @@ namespace WhereCanIGo
                 guiItems.Add(new DialogGUILabel(_utilities.Warnings, _utilities.CreateNoteStyle()));
                 DialogGUIBase[] vertical = new DialogGUIBase[_utilities.Planets.Count];
                 DialogGUIBase[] horizontal = new DialogGUIBase[2];
-                horizontal[0] = new DialogGUIToggle(() => _returnTrip, "Return Trip?", delegate { SetReturnTrip(); });
-                horizontal[1] = new DialogGUIToggle(() => payloadOnly, "Payload Only", delegate { SetPayoadOnly(); });
+                horizontal[0] = new DialogGUIToggle(() => _returnTrip, LocalizedStrings.IsReturn, delegate { SetReturnTrip(); }); //"Return Trip?"
+                horizontal[1] = new DialogGUIToggle(() => payloadOnly, LocalizedStrings.PayloadOnly, delegate { SetPayoadOnly(); }); //"Payload Only"
                 guiItems.Add(new DialogGUIHorizontalLayout(horizontal));
                 for (int i = 0; i < _utilities.Planets.Count; i++)
                 {
                     PlanetDeltaV p = _utilities.Planets.ElementAt(i);
                     horizontal = new DialogGUIBase[4];
                     horizontal[0] = new DialogGUILabel(p.GetName(), _utilities.GenerateStyle(-1, false));
-                    horizontal[1] = GetDeltaVString(p, "Flyby: ");
-                    horizontal[2] = GetDeltaVString(p, "Orbiting: "); 
-                    if(p.IsHomeWorld && p.SynchronousDv != -1) horizontal[3] = GetDeltaVString(p, "Synchronous Orbit: ");
-                    else horizontal[3] = GetDeltaVString(p, "Landing: ");
+                    horizontal[1] = GetDeltaVString(p, LocalizedStrings.Situation_Flyby + ": "); //Flyby
+                    horizontal[2] = GetDeltaVString(p, LocalizedStrings.Situation_Orbiting + ": "); //Orbiting
+                    if (p.IsHomeWorld && p.SynchronousDv != -1) horizontal[3] = GetDeltaVString(p, LocalizedStrings.Situation_SynchronousOrbit + ": "); //Synchronous Orbit
+                    else horizontal[3] = GetDeltaVString(p, LocalizedStrings.Situation_Landing + ": "); //Landing
                     vertical[i] = new DialogGUIHorizontalLayout(horizontal);
                 }
                 DialogGUIVerticalLayout layout = new DialogGUIVerticalLayout(vertical);
                 guiItems.Add(new DialogGUIScrollList(-Vector2.one, false, true, layout));
             }
-            guiItems.Add(new DialogGUILabel("*Assuming craft has enough chutes"));
-            guiItems.Add(new DialogGUIButton("Close", () =>_utilities.CloseDialog(_uiDialog), false));
+            guiItems.Add(new DialogGUILabel(LocalizedStrings.AssumTips)); //"*Assuming craft has enough chutes"
+            guiItems.Add(new DialogGUIButton(LocalizedStrings.CloseButton, () => _utilities.CloseDialog(_uiDialog), false)); //"Close"
             return PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new MultiOptionDialog("WhereCanIGoDialog", "", "Where Can I Go", UISkinManager.defaultSkin,
+                new MultiOptionDialog("WhereCanIGoDialog", "", LocalizedStrings.Dialog_title2, UISkinManager.defaultSkin, // "Where Can I Go"
                     _geometry,
                     guiItems.ToArray()), false, UISkinManager.defaultSkin);
         }
@@ -91,27 +91,36 @@ namespace WhereCanIGo
 
         private DialogGUILabel GetDeltaVString(PlanetDeltaV planet, string situation)
         {
+            int SituationCases = 0;
+            if (situation == LocalizedStrings.Situation_Flyby + ": ")
+                SituationCases = 1;
+            else if (situation == LocalizedStrings.Situation_Orbiting + ": ")
+                SituationCases = 2;
+            else if (situation == LocalizedStrings.Situation_Landing + ": ")
+                SituationCases = 3;
+            else if (situation == LocalizedStrings.Situation_SynchronousOrbit + ": ")
+                SituationCases = 4;
             int deltaV = -1;
             string s;
             // ReSharper disable once SwitchStatementMissingSomeCases
-            switch (situation)
-                {
-                    case "Flyby: ":
-                        deltaV = planet.EscapeDv;
-                        if (_returnTrip) deltaV += planet.ReturnFromFlybyDv;
-                        break;
-                    case "Orbiting: ":
-                        deltaV = planet.OrbitDv;
-                        if (_returnTrip) deltaV += planet.ReturnFromOrbitDv;
-                        break;
-                    case "Landing: ":
-                        deltaV = planet.LandDv;
-                        if (_returnTrip) deltaV += planet.ReturnFromLandingDv;
-                        break;
-                    case "Synchronous Orbit: ":
-                        deltaV = planet.SynchronousDv;
-                        break;
-                }
+            switch (SituationCases)
+            {
+                case 1://"Flyby: ":
+                    deltaV = planet.EscapeDv;
+                    if (_returnTrip) deltaV += planet.ReturnFromFlybyDv;
+                    break;
+                case 2://"Orbiting: ":
+                    deltaV = planet.OrbitDv;
+                    if (_returnTrip) deltaV += planet.ReturnFromOrbitDv;
+                    break;
+                case 3://"Landing: ":
+                    deltaV = planet.LandDv;
+                    if (_returnTrip) deltaV += planet.ReturnFromLandingDv;
+                    break;
+                case 4://"Synchronous Orbit: ":
+                    deltaV = planet.SynchronousDv;
+                    break;
+            }
 
             if (payloadOnly) deltaV -= _utilities.ConvertBodyToPlanetDeltaV(FlightGlobals.GetHomeBody()).OrbitDv;
             UIStyle style = _utilities.GenerateStyle(deltaV, false);

@@ -334,3 +334,4 @@ ASALocalRun/
 .localhistory/
 *.dll
 *.zip
+*.csproj

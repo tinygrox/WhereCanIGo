@@ -1,7 +1,7 @@
+﻿using KSP.UI.Screens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using KSP.UI.Screens;
 using UnityEngine;
 
 namespace WhereCanIGo
@@ -34,7 +34,7 @@ namespace WhereCanIGo
 
         private void RemoveToolbarButton(GameScenes whatever)
         {
-            if(_toolbarButton != null) ApplicationLauncher.Instance.RemoveModApplication(_toolbarButton);
+            if (_toolbarButton != null) ApplicationLauncher.Instance.RemoveModApplication(_toolbarButton);
             _toolbarButton = null;
         }
 
@@ -49,13 +49,13 @@ namespace WhereCanIGo
             bool vesselIsHome = FlightGlobals.ActiveVessel.mainBody == FlightGlobals.GetHomeBody();
             if (FlightGlobals.ActiveVessel == null)
             {
-                guiItems.Add(new DialogGUILabel("No Vessel Detected"));
+                guiItems.Add(new DialogGUILabel(LocalizedStrings.Dialog_title)); // "No Vessel Detected"
             }
-            else if(vesselIsHome && FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING)
+            else if (vesselIsHome && FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING)
             {
                 guiItems.Add(new DialogGUILabel(_utilities.SystemNotes, _utilities.CreateNoteStyle()));
                 guiItems.Add(new DialogGUILabel(_utilities.Warnings, _utilities.CreateNoteStyle()));
-                guiItems.Add(new DialogGUIToggle(() => _returnTrip, "Return Trip?", delegate { SetReturnTrip(); }));
+                guiItems.Add(new DialogGUIToggle(() => _returnTrip, LocalizedStrings.IsReturn, delegate { SetReturnTrip(); })); // "Return Trip?"
                 for (int i = 0; i < _utilities.Planets.Count; i++)
                 {
                     PlanetDeltaV p = _utilities.Planets.ElementAt(i);
@@ -63,20 +63,20 @@ namespace WhereCanIGo
                     horizontal[0] = new DialogGUILabel(p.GetName(), _utilities.GenerateStyle(-1, false));
                     horizontal[1] = GetDeltaVString(p, "Flyby: ");
                     horizontal[2] = GetDeltaVString(p, "Orbiting: ");
-                    if(p.IsHomeWorld && p.SynchronousDv != -1) horizontal[3] = GetDeltaVString(p, "Synchronous Orbit: ");
+                    if (p.IsHomeWorld && p.SynchronousDv != -1) horizontal[3] = GetDeltaVString(p, "Synchronous Orbit: ");
                     else horizontal[3] = GetDeltaVString(p, "Landing: ");
                     guiItems.Add(new DialogGUIHorizontalLayout(horizontal));
                 }
 
-                guiItems.Add(new DialogGUILabel("*Assuming craft has enough chutes"));
+                guiItems.Add(new DialogGUILabel(LocalizedStrings.AssumTips)); // "*Assuming craft has enough chutes"
             }
             else
             {
-                guiItems.Add(new DialogGUILabel("No Data Available. Achieve stable orbit around "+FlightGlobals.GetHomeBodyName(), _utilities.GenerateStyle(99999, true)));
+                guiItems.Add(new DialogGUILabel("No Data Available. Achieve stable orbit around " + FlightGlobals.GetHomeBodyName(), _utilities.GenerateStyle(99999, true)));
             }
-            guiItems.Add(new DialogGUIButton("Close", () =>_utilities.CloseDialog(_uiDialog), false));
+            guiItems.Add(new DialogGUIButton(LocalizedStrings.CloseButton, () => _utilities.CloseDialog(_uiDialog), false)); // "Close"
             return PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new MultiOptionDialog("WhereCanIGoDialog", "", "Where Can I Go", UISkinManager.defaultSkin,
+                new MultiOptionDialog("WhereCanIGoDialog", "", LocalizedStrings.Dialog_title2, UISkinManager.defaultSkin, // "Where Can I Go"
                     _geometry,
                     guiItems.ToArray()), false, UISkinManager.defaultSkin);
         }
@@ -112,7 +112,7 @@ namespace WhereCanIGo
             deltaV -= _utilities.ConvertBodyToPlanetDeltaV(FlightGlobals.GetHomeBody()).OrbitDv;
             UIStyle style = _utilities.GenerateStyle(deltaV, false);
             string status = _utilities.VesselStatus(deltaV, situation, planet);
-            double shortFallOrDeficit = Math.Round(Math.Abs(deltaV - FlightGlobals.ActiveVessel.VesselDeltaV.TotalDeltaVVac),0);
+            double shortFallOrDeficit = Math.Round(Math.Abs(deltaV - FlightGlobals.ActiveVessel.VesselDeltaV.TotalDeltaVVac), 0);
             if (status == "NO")
                 status = status + " (" + shortFallOrDeficit + "m/s short)";
             else status = status + " (+" + shortFallOrDeficit + "m/s)";
